@@ -2,10 +2,10 @@
   "name": "",
   "description": "",
   "container-image": {
-    "image": "neubiaswg5/w_",
+    "image": "neubiaswg5/w_nucleisegmentation-unet",
     "type": "singularity"
   },
-  "command-line": "python wrapper.py CYTOMINE_HOST CYTOMINE_PUBLIC_KEY CYTOMINE_PRIVATE_KEY CYTOMINE_ID_PROJECT CYTOMINE_ID_SOFTWARE",
+  "command-line": "python wrapper.py CYTOMINE_HOST CYTOMINE_PUBLIC_KEY CYTOMINE_PRIVATE_KEY CYTOMINE_ID_PROJECT CYTOMINE_ID_SOFTWARE NUCLEI_MIN_SIZE",
   "inputs": [
     {
       "id": "cytomine_host",
@@ -50,6 +50,17 @@
       "name": "Cytomine software ID",
       "set-by-server": true,
       "optional": false,
+      "type": "Number"
+    },
+    {
+      "id": "nuclei_min_size",
+      "value-key": "@ID",
+      "command-line-flag": "--@id",
+      "name": "Minimum estimated size of a nucleus",
+      "description": "Minimum estimated size of a nucleus",
+      "default-value": 25,
+      "set-by-server": false,
+      "optional": true,
       "type": "Number"
     }
   ],
