@@ -19,12 +19,19 @@ RUN cp /neubiaswg5-utilities/bin/* /usr/bin/ && \
 
 # ------------------------------------------------------------------------------
 
+RUN pip install keras
+RUN pip install tensorflow
+
 RUN git clone https://github.com/carpenterlab/2019_caicedo_cytometryA.git
 
+RUN mkdir /app && mkdir /app/utils
+RUN cp /2019_caicedo_cytometryA/unet4nuclei/utils/* /app/utils/
+ADD model_builder.py /app/utils/model_builder.py
 
-
+ADD unet_weights.h5 /app/weights.h5
 RUN chmod 444 /app/weights.h5
 
+ADD unet_utils.py /app/unet_utils.py
 ADD wrapper.py /app/wrapper.py
 
 ENTRYPOINT ["python3.6","/app/wrapper.py"]

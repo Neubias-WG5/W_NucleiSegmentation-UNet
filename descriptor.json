@@ -1,5 +1,5 @@
 {
-  "name": "",
+  "name": "NucleiSegmentation-UNet",
   "description": "",
   "container-image": {
     "image": "neubiaswg5/w_nucleisegmentation-unet",
