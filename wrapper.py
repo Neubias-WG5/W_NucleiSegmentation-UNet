@@ -10,7 +10,7 @@ import utils.metrics
 import unet_utils
 from unet_utils import Dataset
 
-TILE_OVERLAP = 16
+TILE_OVERLAP = 8
 
 def main(argv):
     base_path = "{}".format(os.getenv("HOME")) # Mandatory for Singularity
@@ -40,14 +40,12 @@ def main(argv):
                 tile_stack[i,:,:,:] = tile
             tile_stack = tile_stack / 255
 
-            probmasks = model.predict(tile_stack, batch_size=1)
-            tile_masks = []
-            for pmask in probmasks:
-                tile_masks.append(utils.metrics.probmap_to_pred(pmask, 1))
+            tile_masks = model.predict(tile_stack, batch_size=1)
 
-            mask_img = dataset.merge_tiles(image_id, tile_masks)
-            label_img = utils.metrics.pred_to_label(mask_img, nj.parameters.nuclei_min_size)
-            skimage.io.imsave(os.path.join(out_path,img.filename), mask_img)
+            probmap = dataset.merge_tiles(image_id, tile_masks, tile_overlap = TILE_OVERLAP)
+            predmask = utils.metrics.probmap_to_pred(probmap, 0)
+            labelimg = utils.metrics.pred_to_label(predmask, nj.parameters.nuclei_min_size).astype(np.uint16)
+            skimage.io.imsave(os.path.join(out_path,img.filename), labelimg)
 
         # 3. Upload data to BIAFLOWS
         upload_data(problem_cls, nj, in_imgs, out_path, **nj.flags, monitor_params={

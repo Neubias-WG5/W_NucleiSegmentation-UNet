@@ -56,46 +56,28 @@ class Dataset():
         self.tile_coords[image_id] = tile_coords
         return tiles
 
-    def merge_tiles(self, image_id, tile_masks):
+    def merge_tiles(self, image_id, tile_masks, tile_overlap = 0):
         orig_size = self.get_orig_size(image_id)
-        mask_img = np.zeros(orig_size, dtype=np.bool)
+        mimg = np.zeros((*orig_size,3))
         tile_coords = self.tile_coords[image_id]
         objects = []
+        ycoords,xcoords = zip(*tile_coords)
+        ycoords = list(dict.fromkeys(ycoords))
+        xcoords = list(dict.fromkeys(xcoords))
+        hoverlap = int(tile_overlap / 2)
+        for x,xcoord in enumerate(xcoords):
+            for y,ycoord in enumerate(ycoords):
+                tile = tile_masks[x*len(ycoords)+y]
+                tsy,tsx = hoverlap,hoverlap
+                if x==0: tsx = 0
+                if y==0: tsy = 0
+                tey,tex = tile.shape[:2]
+                if ycoord+tey > mimg.shape[0]: tey = mimg.shape[0]-ycoord
+                if xcoord+tex > mimg.shape[1]: tex = mimg.shape[1]-xcoord
 
-        for tile,coords in zip(tile_masks, tile_coords):
-            mask = tile
-            # Cut added regions from small images
-            if mask.shape[0] > orig_size[0]:
-                mask = mask[:orig_size[0],:]
-            if mask.shape[1] > orig_size[1]:
-                mask = mask[:,:orig_size[1]]
-            mask[mask < 2] = 0
-            mask[mask == 2] = 1
-            mrows = np.any(mask, axis=1)
-            mcols = np.any(mask, axis=0)
-            try:
-                rmin,rmax = np.where(mrows)[0][[0, -1]]
-                cmin,cmax = np.where(mcols)[0][[0, -1]]
-            except:
-                continue
-                
-            mask = mask[rmin:rmax+1, cmin:cmax+1]
-            m_coords = [0,0,0,0]
-            m_coords[0] = coords[0] + rmin
-            m_coords[2] = coords[0] + rmax
-            m_coords[1] = coords[1] + cmin
-            m_coords[3] = coords[1] + cmax
-            objects.append({'roi': m_coords,
-                            'mask': mask})
+                mimg[ycoord+tsy:ycoord+tey,xcoord+tsx:xcoord+tex,:] = tile[tsy:tey,tsx:tex,:]
 
-        for obj in objects:
-            roi = obj['roi']
-            mcrop = mask_img[roi[0]:roi[2]+1, roi[1]:roi[3]+1]
-            if ~(mcrop & obj['mask']).any():
-                mcrop = mcrop | obj['mask']
-                mask_img[roi[0]:roi[2]+1, roi[1]:roi[3]+1] = mcrop
-        
-        return mask_img.astype(np.uint8)
+        return mimg
 
     def get_orig_size(self, image_id):
         return self.orig_size.get(image_id, (0,0))
