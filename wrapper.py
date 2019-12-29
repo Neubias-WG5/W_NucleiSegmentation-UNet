@@ -43,7 +43,7 @@ def main(argv):
             tile_masks = model.predict(tile_stack, batch_size=1)
 
             probmap = dataset.merge_tiles(image_id, tile_masks, tile_overlap = TILE_OVERLAP)
-            predmask = utils.metrics.probmap_to_pred(probmap, 0)
+            predmask = utils.metrics.probmap_to_pred(probmap, nj.parameters.boundary_weight)
             labelimg = utils.metrics.pred_to_label(predmask, nj.parameters.nuclei_min_size).astype(np.uint16)
             skimage.io.imsave(os.path.join(out_path,img.filename), labelimg)
 

@@ -5,7 +5,7 @@
     "image": "neubiaswg5/w_nucleisegmentation-unet",
     "type": "singularity"
   },
-  "command-line": "python wrapper.py CYTOMINE_HOST CYTOMINE_PUBLIC_KEY CYTOMINE_PRIVATE_KEY CYTOMINE_ID_PROJECT CYTOMINE_ID_SOFTWARE NUCLEI_MIN_SIZE",
+  "command-line": "python wrapper.py CYTOMINE_HOST CYTOMINE_PUBLIC_KEY CYTOMINE_PRIVATE_KEY CYTOMINE_ID_PROJECT CYTOMINE_ID_SOFTWARE NUCLEI_MIN_SIZE BOUNDARY_WEIGHT",
   "inputs": [
     {
       "id": "cytomine_host",
@@ -59,6 +59,17 @@
       "name": "Minimum estimated size of a nucleus",
       "description": "Minimum estimated size of a nucleus",
       "default-value": 25,
+      "set-by-server": false,
+      "optional": true,
+      "type": "Number"
+    },
+    {
+      "id": "boundary_weight",
+      "value-key": "@ID",
+      "command-line-flag": "--@id",
+      "name": "Boundary class weight",
+      "description": "Boundary class weight in range 0.0-1.0 (larger value results in better object separation but smaller objects)",
+      "default-value": 0.0,
       "set-by-server": false,
       "optional": true,
       "type": "Number"
