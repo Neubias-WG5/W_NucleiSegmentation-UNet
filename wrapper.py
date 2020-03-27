@@ -19,7 +19,7 @@ from unet_utils import Dataset
 TILE_OVERLAP = 8
 
 def label_image(probmap, boundary_weight, min_size):
-    predmask = utils.metrics.probmap_to_pred(probmap, boundary_weight)
+    predmask = utils.metrics.probmap_to_pred(probmap, boundary_weight).astype(np.bool)
     predmask = skimage.morphology.remove_small_holes(predmask, area_threshold=min_size)
     distance = ndimage.distance_transform_edt(predmask)
     distance = skimage.filters.gaussian(distance, sigma=3)
@@ -28,7 +28,7 @@ def label_image(probmap, boundary_weight, min_size):
     labelimg = skimage.morphology.watershed(-distance, markers, mask=predmask)
     labelimg = labelimg.astype(np.uint16)
     labelimg = skimage.morphology.remove_small_objects(labelimg, min_size=min_size)
-    labelimg = skimage.segmentation.relabel_sequential(labelimg)
+    labelimg = skimage.segmentation.relabel_sequential(labelimg)[0].astype(np.uint16)
     return labelimg
 
 def main(argv):
@@ -62,7 +62,7 @@ def main(argv):
             tile_masks = model.predict(tile_stack, batch_size=1)
 
             probmap = dataset.merge_tiles(image_id, tile_masks, tile_overlap = TILE_OVERLAP)
-            labelimg = label_image(probmap)
+            labelimg = label_image(probmap, nj.parameters.boundary_weight, nj.parameters.nuclei_min_size)
             skimage.io.imsave(os.path.join(out_path,img.filename), labelimg)
 
         # 3. Upload data to BIAFLOWS
