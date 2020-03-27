@@ -1,7 +1,13 @@
 import sys
 import os
+import math
 import numpy as np
 import skimage.io
+from scipy import ndimage
+import skimage.morphology
+import skimage.feature
+import skimage.filters
+import skimage.segmentation
 from cytomine.models import Job
 from neubiaswg5 import CLASS_OBJSEG
 from neubiaswg5.helpers import NeubiasJob, prepare_data, upload_data, upload_metrics
@@ -11,6 +17,19 @@ import unet_utils
 from unet_utils import Dataset
 
 TILE_OVERLAP = 8
+
+def label_image(probmap, boundary_weight, min_size):
+    predmask = utils.metrics.probmap_to_pred(probmap, boundary_weight)
+    predmask = skimage.morphology.remove_small_holes(predmask, area_threshold=min_size)
+    distance = ndimage.distance_transform_edt(predmask)
+    distance = skimage.filters.gaussian(distance, sigma=3)
+    lmax = skimage.feature.peak_local_max(distance, indices=False, footprint=np.ones((3,3)), labels=predmask)
+    markers = skimage.morphology.label(lmax)
+    labelimg = skimage.morphology.watershed(-distance, markers, mask=predmask)
+    labelimg = labelimg.astype(np.uint16)
+    labelimg = skimage.morphology.remove_small_objects(labelimg, min_size=min_size)
+    labelimg = skimage.segmentation.relabel_sequential(labelimg)
+    return labelimg
 
 def main(argv):
     base_path = "{}".format(os.getenv("HOME")) # Mandatory for Singularity
@@ -43,8 +62,7 @@ def main(argv):
             tile_masks = model.predict(tile_stack, batch_size=1)
 
             probmap = dataset.merge_tiles(image_id, tile_masks, tile_overlap = TILE_OVERLAP)
-            predmask = utils.metrics.probmap_to_pred(probmap, nj.parameters.boundary_weight)
-            labelimg = utils.metrics.pred_to_label(predmask, nj.parameters.nuclei_min_size).astype(np.uint16)
+            labelimg = label_image(probmap)
             skimage.io.imsave(os.path.join(out_path,img.filename), labelimg)
 
         # 3. Upload data to BIAFLOWS

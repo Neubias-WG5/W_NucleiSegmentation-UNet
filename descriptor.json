@@ -68,7 +68,7 @@
       "value-key": "@ID",
       "command-line-flag": "--@id",
       "name": "Boundary class weight",
-      "description": "Boundary class weight in range 0.0-1.0 (larger value results in better object separation but smaller objects)",
+      "description": "Boundary class weight (larger value results in better object separation but smaller objects)",
       "default-value": 0.0,
       "set-by-server": false,
       "optional": true,
