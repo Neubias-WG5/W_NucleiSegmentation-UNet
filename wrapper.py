@@ -10,7 +10,7 @@ import skimage.filters
 import skimage.segmentation
 from cytomine.models import Job
 from biaflows import CLASS_OBJSEG
-from biaflows.helpers import NeubiasJob, prepare_data, upload_data, upload_metrics
+from biaflows.helpers import BiaflowsJob, prepare_data, upload_data, upload_metrics
 import utils.model_builder
 import utils.metrics
 import unet_utils
