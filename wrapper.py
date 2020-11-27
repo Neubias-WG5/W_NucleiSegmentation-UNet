@@ -9,14 +9,15 @@ import skimage.feature
 import skimage.filters
 import skimage.segmentation
 from cytomine.models import Job
-from neubiaswg5 import CLASS_OBJSEG
-from neubiaswg5.helpers import NeubiasJob, prepare_data, upload_data, upload_metrics
+from biaflows import CLASS_OBJSEG
+from biaflows.helpers import NeubiasJob, prepare_data, upload_data, upload_metrics
 import utils.model_builder
 import utils.metrics
 import unet_utils
 from unet_utils import Dataset
 
 TILE_OVERLAP = 8
+
 
 def label_image(probmap, boundary_weight, min_size):
     predmask = utils.metrics.probmap_to_pred(probmap, boundary_weight).astype(np.bool)
@@ -31,11 +32,12 @@ def label_image(probmap, boundary_weight, min_size):
     labelimg = skimage.segmentation.relabel_sequential(labelimg)[0].astype(np.uint16)
     return labelimg
 
+
 def main(argv):
     base_path = "{}".format(os.getenv("HOME")) # Mandatory for Singularity
     problem_cls = CLASS_OBJSEG
 
-    with NeubiasJob.from_cli(argv) as nj:
+    with BiaflowsJob.from_cli(argv) as nj:
         nj.job.update(status=Job.RUNNING, progress=0, statusComment="Initialisation...")
         
         # 1. Prepare data for workflow
@@ -51,8 +53,8 @@ def main(argv):
         for img in in_imgs:
             image_id = img.filename_no_extension
             tiles = dataset.load_image(image_id, img.filepath, TILE_OVERLAP)
-            orig_size = dataset.get_orig_size(image_id)
-            mask_img = np.zeros(orig_size, dtype=np.uint8)
+            # orig_size = dataset.get_orig_size(image_id)
+            # mask_img = np.zeros(orig_size, dtype=np.uint8)
 
             tile_stack = np.zeros((len(tiles),unet_utils.IMAGE_SIZE[0],unet_utils.IMAGE_SIZE[1],3))
             for i,tile in enumerate(tiles):
